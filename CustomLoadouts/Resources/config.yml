@@ -1,0 +1,49 @@
+﻿# Prints a confirmation whenever a player is given a loadout
+verbose: true
+# Prints debug messages
+debug: false
+
+# This sets up the loadouts and the permission nodes required to get them
+# For instance "customloadouts.donatorloadouts" gives all loadouts under the donatorloadouts node below, as long as the class and chance checks are successful.
+customloadouts:
+    # Name of this permission node
+    donatorloadouts:
+        # Class, check #resources in the EXILED discord server for class names, set to all to give to all classes
+        all:
+            # Percentage chance for item group to spawn
+            - 50:
+                # Items to spawn, check #resources in the EXILED discord server for item names.
+                # You can start a loadout with REMOVEITEMS and REMOVEAMMO to delete the existing items/ammo.
+                # All weapons spawn with one mag/clip loaded which cannot be removed, giving ammo adds the ammo directly to the player instead of spawning it as an item in their inventory.
+                - Coin # This example has a 50% chance to spawn a coin to all players with the customloadouts.donatorloadouts permission node
+            - 10:
+                - Medkit
+        SCIENTIST:
+            - 10:
+                # Starts with REMOOVEITEMS to clear the default inventory before the items are added.
+                - REMOVEITEMS
+                - KeycardScientistMajor
+                - Medkit
+            - 5:
+                - REMOVEITEMS
+                - REMOVEAMMO
+                - GunUSP
+                - Ammo9mm
+                - Ammo9mm
+                - KeycardScientistMajor
+                - Medkit
+    moderatorloadouts:
+        CLASSD:
+            - 30:
+                - Flashlight
+    adminloadouts:
+        all:
+            - 100:
+                - MicroHID
+                - MicroHID
+                - MicroHID
+                - MicroHID
+                - MicroHID
+                - MicroHID
+                - MicroHID
+                - MicroHID
