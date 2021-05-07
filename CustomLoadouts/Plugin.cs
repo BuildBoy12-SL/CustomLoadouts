@@ -7,9 +7,10 @@
 
 namespace CustomLoadouts
 {
+    using System;
+    using System.Collections.Generic;
     using System.IO;
-    using System.Text;
-    using CustomLoadouts.Properties;
+    using System.Linq;
     using Exiled.API.Features;
     using Newtonsoft.Json.Linq;
     using YamlDotNet.Serialization;
@@ -19,9 +20,11 @@ namespace CustomLoadouts
     /// </summary>
     public class Plugin : Plugin<Config>
     {
+        private const string RemoveAmmo = "removeammo";
+        private const string RemoveItems = "removeitems";
         private static readonly Plugin InstanceValue = new Plugin();
-
-        private static readonly string PluginDirectory = Path.Combine(Paths.Configs, "CustomLoadouts");
+        private static readonly string ConfigDirectory = Path.Combine(Paths.Configs, "CustomLoadouts");
+        private static readonly string FileDirectory = Path.Combine(ConfigDirectory, "config.yml");
 
         private Plugin()
         {
@@ -38,71 +41,141 @@ namespace CustomLoadouts
         /// </summary>
         internal static Plugin Instance { get; } = InstanceValue;
 
-        /// <summary>
-        /// Gets all of the loadouts to be assigned to players.
-        /// </summary>
-        internal static JObject Loadouts { get; private set; }
-
         /// <inheritdoc/>
         public override void OnEnabled()
         {
-            string folderPath = Path.Combine(Paths.Plugins, "CustomLoadouts");
-            if (!Directory.Exists(folderPath))
-            {
-                Directory.CreateDirectory(folderPath);
-            }
-
-            string globalFilePath = Path.Combine(folderPath, "config.yml");
-            if (!File.Exists(globalFilePath))
-            {
-                File.WriteAllText(globalFilePath, Encoding.UTF8.GetString(Resources.Config));
-            }
-
             Exiled.Events.Handlers.Player.ChangingRole += EventHandlers.OnChangingRole;
+            Exiled.Events.Handlers.Server.ReloadedConfigs += OnReloadedConfigs;
+            LoadLoadouts();
             base.OnEnabled();
         }
 
         /// <inheritdoc/>
         public override void OnDisabled()
         {
+            EventHandlers.Loadouts.Clear();
             Exiled.Events.Handlers.Player.ChangingRole -= EventHandlers.OnChangingRole;
+            Exiled.Events.Handlers.Server.ReloadedConfigs -= OnReloadedConfigs;
             base.OnDisabled();
         }
 
-        /// <inheritdoc/>
-        public override void OnReloaded()
+        private void OnReloadedConfigs()
         {
-            Reload();
+            EventHandlers.Loadouts.Clear();
+            LoadLoadouts();
         }
 
-        private void Reload()
+        private void LoadLoadouts()
         {
-            string text = Config.Global
-                ? Path.Combine(PluginDirectory, "config.yml")
-                : Path.Combine(PluginDirectory, Server.Port.ToString(), "config.yml");
-
-            Log.Info($"Loading config {text}...");
-            if (!Config.Global)
+            try
             {
-                if (!Directory.Exists(Path.Combine(PluginDirectory, Server.Port.ToString())))
+                string path = Config.Global
+                    ? FileDirectory
+                    : Path.Combine(FileDirectory, Server.Port.ToString(), "config.yml");
+
+                if (!Directory.Exists(ConfigDirectory))
+                    Directory.CreateDirectory(ConfigDirectory);
+
+                if (!Config.Global && !Directory.Exists(Path.Combine(ConfigDirectory, Server.Port.ToString())))
+                    Directory.CreateDirectory(Path.Combine(ConfigDirectory, Server.Port.ToString()));
+
+                // if (!File.Exists(path))
+                    // File.WriteAllText(path, Encoding.UTF8.GetString(Resources.Config));
+
+                FileStream stream = File.OpenRead(path);
+                IDeserializer deserializer = new DeserializerBuilder().Build();
+                object yamlObject = deserializer.Deserialize(new StreamReader(stream));
+                if (yamlObject == null)
                 {
-                    Directory.CreateDirectory(Path.Combine(PluginDirectory, Server.Port.ToString()));
+                    Log.Error("Unable to deserialize loadouts!");
+                    OnDisabled();
+                    return;
+                }
+
+                ISerializer serializer = new SerializerBuilder().JsonCompatible().Build();
+                string jsonString = serializer.Serialize(yamlObject);
+                JObject json = JObject.Parse(jsonString);
+
+                JObject configs = json.SelectToken("customloadouts")?.Value<JObject>();
+                if (configs == null)
+                {
+                    Log.Error("Unable to read loadouts!");
+                    OnDisabled();
+                    return;
+                }
+
+                JProperty[] groups = configs.Properties().ToArray();
+                foreach (JProperty node in groups)
+                {
+                    JProperty[] array = node.Value.Value<JObject>().Properties().ToArray();
+                    foreach (JProperty group in array)
+                    {
+                        bool allRoles = string.Equals(group.Name, "all", StringComparison.OrdinalIgnoreCase);
+                        if (!Enum.TryParse(group.Name, true, out RoleType roleType))
+                        {
+                            if (!allRoles)
+                            {
+                                Log.Warn($"Unable to parse {group.Name} into a {nameof(RoleType)}.");
+                                continue;
+                            }
+
+                            roleType = RoleType.None;
+                        }
+
+                        foreach (JToken bundle in group.Value.Children())
+                        {
+                            JObject jObject = (JObject)bundle;
+                            JProperty jProperty = jObject.Properties().First();
+                            if (!float.TryParse(jProperty.Name, out float chance))
+                            {
+                                Log.Error($"Invalid chance: {jProperty.Name}");
+                                continue;
+                            }
+
+                            bool removeAmmo = false;
+                            bool removeItems = false;
+                            List<ItemType> items = new List<ItemType>();
+                            foreach (JToken jToken in jProperty.Value as JArray)
+                            {
+                                string name = jToken.ToString();
+                                if (string.Equals(name, RemoveAmmo, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    removeAmmo = true;
+                                    continue;
+                                }
+
+                                if (string.Equals(name, RemoveItems, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    removeItems = true;
+                                    continue;
+                                }
+
+                                if (!Enum.TryParse(name, true, out ItemType itemType))
+                                {
+                                    Log.Warn($"Could not parse {itemType} into a {nameof(ItemType)}.");
+                                }
+
+                                items.Add(itemType);
+                            }
+
+                            EventHandlers.Loadouts.Add(new Loadout
+                            {
+                                Permission = "customloadouts." + node.Name,
+                                Chance = chance,
+                                Role = roleType,
+                                RemoveAmmo = removeAmmo,
+                                RemoveItems = removeItems,
+                                Items = items,
+                            });
+                        }
+                    }
                 }
             }
-
-            if (!File.Exists(text))
+            catch (Exception e)
             {
-                File.WriteAllText(text, Encoding.UTF8.GetString(Resources.Config));
+                Log.Error($"Error while generating loadouts: {e}");
+                OnDisabled();
             }
-
-            FileStream stream = File.OpenRead(text);
-            IDeserializer deserializer = new DeserializerBuilder().Build();
-            object obj = deserializer.Deserialize(new StreamReader(stream));
-            ISerializer serializer = new SerializerBuilder().JsonCompatible().Build();
-            string text2 = serializer.Serialize(obj);
-            JObject jObject = JObject.Parse(text2);
-            Loadouts = jObject.SelectToken("customloadouts").Value<JObject>();
-            Log.Info("Config loaded.");
         }
     }
 }

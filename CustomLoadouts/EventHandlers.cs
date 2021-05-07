@@ -9,11 +9,8 @@ namespace CustomLoadouts
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using Exiled.API.Features;
     using Exiled.Events.EventArgs;
     using Exiled.Permissions.Extensions;
-    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// Contains all of the EventHandlers used by this plugin.
@@ -21,105 +18,35 @@ namespace CustomLoadouts
     public static class EventHandlers
     {
         private static readonly Random Random = new Random();
-        private static readonly HashSet<string> Spawning = new HashSet<string>();
+        private static readonly HashSet<int> Spawning = new HashSet<int>();
+
+        public static List<Loadout> Loadouts { get; } = new List<Loadout>();
 
         /// <inheritdoc cref="Exiled.Events.Handlers.Player.OnChangingRole(ChangingRoleEventArgs)"/>
         internal static void OnChangingRole(ChangingRoleEventArgs ev)
         {
-            if (Spawning.Contains(ev.Player.UserId))
-            {
+            if (!Spawning.Add(ev.Player.Id))
                 return;
-            }
 
-            Spawning.Add(ev.Player.UserId);
-            try
+            foreach (Loadout loadout in Loadouts)
             {
-                JProperty[] array = Plugin.Loadouts.Properties().ToArray();
-                foreach (var jproperty in array)
-                {
-                    if (!ev.Player.CheckPermission($"customloadouts.{jproperty.Name}"))
-                    {
-                        continue;
-                    }
+                if (!ev.Player.CheckPermission(loadout.Permission))
+                    continue;
 
-                    try
-                    {
-                        JProperty[] array2 = jproperty.Value.Value<JObject>().Properties().ToArray();
-                        foreach (var jproperty2 in array2)
-                        {
-                            if (!string.Equals(ev.NewRole.ToString(), jproperty2.Name, StringComparison.OrdinalIgnoreCase) &&
-                                jproperty2.Name.ToUpper() != "ALL")
-                            {
-                                continue;
-                            }
+                if (loadout.Chance < Random.Next(0, 101))
+                    continue;
 
-                            try
-                            {
-                                foreach (JToken jToken in jproperty2.Value.Children())
-                                {
-                                    JObject jObject = (JObject)jToken;
-                                    JProperty jproperty3 = jObject.Properties().First();
-                                    if (!float.TryParse(jproperty3.Name, out float num))
-                                    {
-                                        Log.Error($"Invalid chance: {jproperty3.Name}");
-                                        continue;
-                                    }
+                if (loadout.RemoveAmmo)
+                    ev.Player.Ammo.Clear();
 
-                                    float rand = Random.Next(1, 101);
-                                    if (rand > num)
-                                    {
-                                        Log.Debug($"{jObject.Path}: Failed random chance. {num} < {rand}", Plugin.Instance.Config.Debug);
-                                        continue;
-                                    }
+                if (loadout.RemoveItems)
+                    ev.Player.Items.Clear();
 
-                                    Log.Debug($"{jObject.Path}: Succeeded random chance. {num} >= {rand}", Plugin.Instance.Config.Debug);
-
-                                    foreach (JToken jToken2 in jproperty3.Value as JArray)
-                                    {
-                                        try
-                                        {
-                                            if (!string.IsNullOrEmpty(jToken2.ToString()) || jToken2.ToString().ToUpper() != "REMOVEITEMS")
-                                            {
-                                                ev.Items.Clear();
-                                                Log.Debug($"Cleared inventory of {ev.Player.Role} {ev.Player.Nickname} ({ev.Player.UserId})", Plugin.Instance.Config.Debug);
-                                                continue;
-                                            }
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            Log.Error($"Error occured while resetting the inventory of {ev.Player?.Nickname}.\n{e}");
-                                        }
-
-                                        if (Enum.TryParse(jToken2.ToString(), true, out ItemType itemType))
-                                        {
-                                            ev.Items.Add(itemType);
-                                            Log.Debug($"{ev.Player.Role} {ev.Player.Nickname} ({ev.Player.UserId}) was given item {jToken2}.", Plugin.Instance.Config.Debug);
-                                        }
-                                        else
-                                        {
-                                            Log.Error($"Could not parse {jToken2} as an ItemType.");
-                                        }
-                                    }
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Log.Error($"Error giving items: {e}");
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error($"Error checking role: {e}");
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Error checking permission: {e}");
+                foreach (var item in loadout.Items)
+                    ev.Player.AddItem(item);
             }
 
-            Spawning.Remove(ev.Player.UserId);
+            Spawning.Remove(ev.Player.Id);
         }
     }
 }

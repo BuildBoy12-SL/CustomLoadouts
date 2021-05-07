@@ -6,7 +6,7 @@
       <AssemblyName>CustomLoadouts</AssemblyName>
       <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
       <Authors>Build</Authors>
-      <Version>1.0.1</Version>
+      <Version>2.0.0</Version>
       <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
       <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
       <GenerateDocumentationFile>true</GenerateDocumentationFile>

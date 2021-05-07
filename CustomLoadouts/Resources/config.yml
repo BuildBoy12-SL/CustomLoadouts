@@ -1,9 +1,4 @@
-﻿# Prints a confirmation whenever a player is given a loadout
-verbose: true
-# Prints debug messages
-debug: false
-
-# This sets up the loadouts and the permission nodes required to get them
+﻿# This sets up the loadouts and the permission nodes required to get them
 # For instance "customloadouts.donatorloadouts" gives all loadouts under the donatorloadouts node below, as long as the class and chance checks are successful.
 customloadouts:
     # Name of this permission node
@@ -20,7 +15,7 @@ customloadouts:
                 - Medkit
         SCIENTIST:
             - 10:
-                # Starts with REMOOVEITEMS to clear the default inventory before the items are added.
+                # Starts with REMOVEITEMS to clear the default inventory before the items are added.
                 - REMOVEITEMS
                 - KeycardScientistMajor
                 - Medkit
