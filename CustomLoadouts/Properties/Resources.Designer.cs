@@ -47,7 +47,8 @@ namespace CustomLoadouts.Properties {
         
         internal static byte[] Config {
             get {
-                return (byte[])ResourceManager.GetObject("Config", resourceCulture);
+                object obj = ResourceManager.GetObject("Config", resourceCulture);
+                return ((byte[])(obj));
             }
         }
     }
