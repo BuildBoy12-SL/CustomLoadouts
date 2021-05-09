@@ -147,7 +147,7 @@ namespace CustomLoadouts
 
                                 if (!Enum.TryParse(name, true, out ItemType itemType))
                                 {
-                                    Log.Warn($"Could not parse {itemType} into a {nameof(ItemType)}.");
+                                    Log.Warn($"Could not parse {itemType} into an {nameof(ItemType)}.");
                                     continue;
                                 }
 

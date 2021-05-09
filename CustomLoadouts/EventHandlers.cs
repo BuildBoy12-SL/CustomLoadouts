@@ -9,6 +9,7 @@ namespace CustomLoadouts
 {
     using System;
     using System.Collections.Generic;
+    using Exiled.API.Features;
     using Exiled.Events.EventArgs;
     using Exiled.Permissions.Extensions;
 
@@ -34,6 +35,9 @@ namespace CustomLoadouts
             foreach (Loadout loadout in Loadouts)
             {
                 if (!ev.Player.CheckPermission(loadout.Permission))
+                    continue;
+
+                if (loadout.Role != ev.NewRole && loadout.Role != RoleType.None)
                     continue;
 
                 if (loadout.Chance < Random.Next(0, 101))
