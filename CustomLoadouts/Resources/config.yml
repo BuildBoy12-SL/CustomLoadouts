@@ -8,7 +8,7 @@ customloadouts:
             # Percentage chance for item group to spawn
             - 50:
                 # Items to spawn, check #resources in the EXILED discord server for item names.
-                # You can start a loadout with REMOVEITEMS and REMOVEAMMO to delete the existing items/ammo.
+                # You can put REMOVEITEMS in a loadout to delete the existing items.
                 # All weapons spawn with one mag/clip loaded which cannot be removed, giving ammo adds the ammo directly to the player instead of spawning it as an item in their inventory.
                 - Coin # This example has a 50% chance to spawn a coin to all players with the customloadouts.donatorloadouts permission node
             - 10:

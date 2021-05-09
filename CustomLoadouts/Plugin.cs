@@ -11,6 +11,8 @@ namespace CustomLoadouts
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text;
+    using CustomLoadouts.Properties;
     using Exiled.API.Features;
     using Newtonsoft.Json.Linq;
     using YamlDotNet.Serialization;
@@ -20,7 +22,6 @@ namespace CustomLoadouts
     /// </summary>
     public class Plugin : Plugin<Config>
     {
-        private const string RemoveAmmo = "removeammo";
         private const string RemoveItems = "removeitems";
         private static readonly Plugin InstanceValue = new Plugin();
         private static readonly string ConfigDirectory = Path.Combine(Paths.Configs, "CustomLoadouts");
@@ -79,8 +80,8 @@ namespace CustomLoadouts
                 if (!Config.Global && !Directory.Exists(Path.Combine(ConfigDirectory, Server.Port.ToString())))
                     Directory.CreateDirectory(Path.Combine(ConfigDirectory, Server.Port.ToString()));
 
-                // if (!File.Exists(path))
-                    // File.WriteAllText(path, Encoding.UTF8.GetString(Resources.Config));
+                if (!File.Exists(path))
+                    File.WriteAllText(path, Encoding.UTF8.GetString(Resources.Config));
 
                 FileStream stream = File.OpenRead(path);
                 IDeserializer deserializer = new DeserializerBuilder().Build();
@@ -132,17 +133,11 @@ namespace CustomLoadouts
                                 continue;
                             }
 
-                            bool removeAmmo = false;
                             bool removeItems = false;
                             List<ItemType> items = new List<ItemType>();
                             foreach (JToken jToken in jProperty.Value as JArray)
                             {
                                 string name = jToken.ToString();
-                                if (string.Equals(name, RemoveAmmo, StringComparison.OrdinalIgnoreCase))
-                                {
-                                    removeAmmo = true;
-                                    continue;
-                                }
 
                                 if (string.Equals(name, RemoveItems, StringComparison.OrdinalIgnoreCase))
                                 {
@@ -153,6 +148,7 @@ namespace CustomLoadouts
                                 if (!Enum.TryParse(name, true, out ItemType itemType))
                                 {
                                     Log.Warn($"Could not parse {itemType} into a {nameof(ItemType)}.");
+                                    continue;
                                 }
 
                                 items.Add(itemType);
@@ -163,7 +159,6 @@ namespace CustomLoadouts
                                 Permission = "customloadouts." + node.Name,
                                 Chance = chance,
                                 Role = roleType,
-                                RemoveAmmo = removeAmmo,
                                 RemoveItems = removeItems,
                                 Items = items,
                             });

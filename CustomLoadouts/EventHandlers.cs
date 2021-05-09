@@ -20,6 +20,9 @@ namespace CustomLoadouts
         private static readonly Random Random = new Random();
         private static readonly HashSet<int> Spawning = new HashSet<int>();
 
+        /// <summary>
+        /// Gets all currently parsed <see cref="Loadout"/> objects.
+        /// </summary>
         public static List<Loadout> Loadouts { get; } = new List<Loadout>();
 
         /// <inheritdoc cref="Exiled.Events.Handlers.Player.OnChangingRole(ChangingRoleEventArgs)"/>
@@ -36,14 +39,11 @@ namespace CustomLoadouts
                 if (loadout.Chance < Random.Next(0, 101))
                     continue;
 
-                if (loadout.RemoveAmmo)
-                    ev.Player.Ammo.Clear();
-
                 if (loadout.RemoveItems)
-                    ev.Player.Items.Clear();
+                    ev.Items.Clear();
 
                 foreach (var item in loadout.Items)
-                    ev.Player.AddItem(item);
+                    ev.Items.Add(item);
             }
 
             Spawning.Remove(ev.Player.Id);

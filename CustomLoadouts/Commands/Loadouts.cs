@@ -36,8 +36,8 @@ namespace CustomLoadouts.Commands
             {
                 stringBuilder.AppendLine().AppendLine($"Permission: {loadout.Permission}")
                     .AppendLine($"Role: {(loadout.Role == RoleType.None ? "All" : loadout.Role.ToString())}")
-                    .AppendLine($"Chance: {loadout.Chance}").AppendLine($"RemoveAmmo: {loadout.RemoveAmmo}")
-                    .AppendLine($"RemoveItems: {loadout.RemoveItems}").AppendLine($"Items: {string.Join(", ", loadout.Items)}");
+                    .AppendLine($"Chance: {loadout.Chance}").AppendLine($"RemoveItems: {loadout.RemoveItems}")
+                    .AppendLine($"Items: {string.Join(", ", loadout.Items)}");
             }
 
             response = StringBuilderPool.Shared.ToStringReturn(stringBuilder);
