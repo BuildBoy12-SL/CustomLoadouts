@@ -9,7 +9,6 @@ namespace CustomLoadouts
 {
     using System;
     using System.Collections.Generic;
-    using Exiled.API.Features;
     using Exiled.Events.EventArgs;
     using Exiled.Permissions.Extensions;
 
