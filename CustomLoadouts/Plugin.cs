@@ -22,7 +22,6 @@ namespace CustomLoadouts
     /// </summary>
     public class Plugin : Plugin<Config>
     {
-        private const string RemoveItems = "removeitems";
         private static readonly Plugin InstanceValue = new Plugin();
         private static readonly string ConfigDirectory = Path.Combine(Paths.Configs, "CustomLoadouts");
         private static readonly string FileDirectory = Path.Combine(ConfigDirectory, "config.yml");
@@ -70,15 +69,16 @@ namespace CustomLoadouts
         {
             try
             {
-                string path = Config.Global
-                    ? FileDirectory
-                    : Path.Combine(FileDirectory, Server.Port.ToString(), "config.yml");
-
                 if (!Directory.Exists(ConfigDirectory))
                     Directory.CreateDirectory(ConfigDirectory);
 
-                if (!Config.Global && !Directory.Exists(Path.Combine(ConfigDirectory, Server.Port.ToString())))
-                    Directory.CreateDirectory(Path.Combine(ConfigDirectory, Server.Port.ToString()));
+                string localDirectory = Path.Combine(ConfigDirectory, Server.Port.ToString());
+                if (!Config.Global && !Directory.Exists(localDirectory))
+                    Directory.CreateDirectory(localDirectory);
+
+                string path = Config.Global
+                    ? FileDirectory
+                    : Path.Combine(FileDirectory, Server.Port.ToString(), "config.yml");
 
                 if (!File.Exists(path))
                     File.WriteAllText(path, Encoding.UTF8.GetString(Resources.Config));
@@ -139,7 +139,7 @@ namespace CustomLoadouts
                             {
                                 string name = jToken.ToString();
 
-                                if (string.Equals(name, RemoveItems, StringComparison.OrdinalIgnoreCase))
+                                if (string.Equals(name, "removeitems", StringComparison.OrdinalIgnoreCase))
                                 {
                                     removeItems = true;
                                     continue;

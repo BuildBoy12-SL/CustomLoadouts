@@ -21,7 +21,6 @@ customloadouts:
                 - Medkit
             - 5:
                 - REMOVEITEMS
-                - REMOVEAMMO
                 - GunUSP
                 - Ammo9mm
                 - Ammo9mm
