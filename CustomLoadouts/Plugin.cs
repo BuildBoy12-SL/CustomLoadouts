@@ -78,7 +78,7 @@ namespace CustomLoadouts
 
                 string path = Config.Global
                     ? FileDirectory
-                    : Path.Combine(FileDirectory, Server.Port.ToString(), "config.yml");
+                    : Path.Combine(localDirectory, "config.yml");
 
                 if (!File.Exists(path))
                     File.WriteAllText(path, Encoding.UTF8.GetString(Resources.Config));
