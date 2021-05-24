@@ -13,6 +13,7 @@ namespace CustomLoadouts
     using System.Linq;
     using System.Text;
     using CustomLoadouts.Properties;
+    using Exiled.API.Enums;
     using Exiled.API.Features;
     using Newtonsoft.Json.Linq;
     using YamlDotNet.Serialization;
@@ -44,9 +45,15 @@ namespace CustomLoadouts
         /// <inheritdoc/>
         public override void OnEnabled()
         {
-            Exiled.Events.Handlers.Player.ChangingRole += EventHandlers.OnChangingRole;
+            Exiled.Events.Handlers.Player.ChangedRole += EventHandlers.OnChangedRole;
             Exiled.Events.Handlers.Server.ReloadedConfigs += OnReloadedConfigs;
-            LoadLoadouts();
+
+            if (!LoadLoadouts())
+            {
+                OnDisabled();
+                return;
+            }
+
             base.OnEnabled();
         }
 
@@ -54,7 +61,7 @@ namespace CustomLoadouts
         public override void OnDisabled()
         {
             EventHandlers.Loadouts.Clear();
-            Exiled.Events.Handlers.Player.ChangingRole -= EventHandlers.OnChangingRole;
+            Exiled.Events.Handlers.Player.ChangedRole -= EventHandlers.OnChangedRole;
             Exiled.Events.Handlers.Server.ReloadedConfigs -= OnReloadedConfigs;
             base.OnDisabled();
         }
@@ -65,7 +72,7 @@ namespace CustomLoadouts
             LoadLoadouts();
         }
 
-        private void LoadLoadouts()
+        private bool LoadLoadouts()
         {
             try
             {
@@ -89,8 +96,7 @@ namespace CustomLoadouts
                 if (yamlObject == null)
                 {
                     Log.Error("Unable to deserialize loadouts!");
-                    OnDisabled();
-                    return;
+                    return false;
                 }
 
                 ISerializer serializer = new SerializerBuilder().JsonCompatible().Build();
@@ -101,8 +107,7 @@ namespace CustomLoadouts
                 if (configs == null)
                 {
                     Log.Error("Unable to read loadouts!");
-                    OnDisabled();
-                    return;
+                    return false;
                 }
 
                 JProperty[] groups = configs.Properties().ToArray();
@@ -135,6 +140,7 @@ namespace CustomLoadouts
 
                             bool removeItems = false;
                             List<ItemType> items = new List<ItemType>();
+                            Dictionary<AmmoType, uint> ammo = new Dictionary<AmmoType, uint>();
                             foreach (JToken jToken in jProperty.Value as JArray)
                             {
                                 string name = jToken.ToString();
@@ -145,13 +151,19 @@ namespace CustomLoadouts
                                     continue;
                                 }
 
-                                if (!Enum.TryParse(name, true, out ItemType itemType))
+                                if (Enum.TryParse(name, true, out AmmoType ammoType))
                                 {
-                                    Log.Warn($"Could not parse {itemType} into an {nameof(ItemType)}.");
+                                    ammo.Add(ammoType, ammoType.GetMagazineSize());
                                     continue;
                                 }
 
-                                items.Add(itemType);
+                                if (Enum.TryParse(name, true, out ItemType itemType))
+                                {
+                                    items.Add(itemType);
+                                    continue;
+                                }
+
+                                Log.Warn($"Could not parse {name} into an {nameof(ItemType)} nor an {nameof(AmmoType)}.");
                             }
 
                             EventHandlers.Loadouts.Add(new Loadout
@@ -161,15 +173,18 @@ namespace CustomLoadouts
                                 Role = roleType,
                                 RemoveItems = removeItems,
                                 Items = items,
+                                Ammo = ammo,
                             });
                         }
                     }
                 }
+
+                return true;
             }
             catch (Exception e)
             {
                 Log.Error($"Error while generating loadouts: {e}");
-                OnDisabled();
+                return false;
             }
         }
     }

@@ -18,7 +18,6 @@ namespace CustomLoadouts
     public static class EventHandlers
     {
         private static readonly Random Random = new Random();
-        private static readonly HashSet<int> Spawning = new HashSet<int>();
 
         /// <summary>
         /// Gets all currently parsed <see cref="Loadout"/> objects.
@@ -26,30 +25,28 @@ namespace CustomLoadouts
         public static List<Loadout> Loadouts { get; } = new List<Loadout>();
 
         /// <inheritdoc cref="Exiled.Events.Handlers.Player.OnChangingRole(ChangingRoleEventArgs)"/>
-        internal static void OnChangingRole(ChangingRoleEventArgs ev)
+        internal static void OnChangedRole(ChangedRoleEventArgs ev)
         {
-            if (!Spawning.Add(ev.Player.Id))
-                return;
-
             foreach (Loadout loadout in Loadouts)
             {
                 if (!ev.Player.CheckPermission(loadout.Permission))
                     continue;
 
-                if (loadout.Role != ev.NewRole && loadout.Role != RoleType.None)
+                if (loadout.Role != ev.Player.Role && loadout.Role != RoleType.None)
                     continue;
 
                 if (loadout.Chance < Random.Next(0, 101))
                     continue;
 
                 if (loadout.RemoveItems)
-                    ev.Items.Clear();
+                    ev.Player.Inventory.Clear();
 
                 foreach (var item in loadout.Items)
-                    ev.Items.Add(item);
-            }
+                    ev.Player.AddItem(item);
 
-            Spawning.Remove(ev.Player.Id);
+                foreach (var ammo in loadout.Ammo)
+                    ev.Player.Ammo[(int)ammo.Key] += ammo.Value;
+            }
         }
     }
 }

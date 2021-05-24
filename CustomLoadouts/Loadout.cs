@@ -8,6 +8,7 @@
 namespace CustomLoadouts
 {
     using System.Collections.Generic;
+    using Exiled.API.Enums;
 
     /// <summary>
     /// A container to be used to pack and unpack loadouts to be given to players when they spawn.
@@ -38,5 +39,10 @@ namespace CustomLoadouts
         /// Gets or sets the collection of items to be given to the player.
         /// </summary>
         public List<ItemType> Items { get; set; }
+
+        /// <summary>
+        /// Gets or sets the collection of ammo to be given to the player.
+        /// </summary>
+        public Dictionary<AmmoType, uint> Ammo { get; set; }
     }
 }
