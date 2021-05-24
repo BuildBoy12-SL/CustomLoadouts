@@ -153,7 +153,7 @@ namespace CustomLoadouts
 
                                 if (Enum.TryParse(name, true, out AmmoType ammoType))
                                 {
-                                    ammo.Add(ammoType, ammoType.GetMagazineSize());
+                                    ammo[ammoType] += ammoType.GetMagazineSize();
                                     continue;
                                 }
 

@@ -9,7 +9,8 @@ customloadouts:
       - 50:
         # Items to spawn, check #resources in the EXILED discord server for item names.
         # You can put REMOVEITEMS in a loadout to delete the existing items.
-        # All weapons spawn with one mag/clip loaded which cannot be removed, giving ammo adds the ammo directly to the player instead of spawning it as an item in their inventory.
+        # All weapons spawn with one mag/clip loaded which cannot be removed. 
+        # Ammo9mm, Ammo762, and Ammo556 will be added as items while Nato9, Nato762, and Nato556 are added to a user's reserve.
         - Coin # This example has a 50% chance to spawn a coin to all players with the customloadouts.donatorloadouts permission node
       - 10:
         - Medkit
