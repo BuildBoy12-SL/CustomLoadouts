@@ -7,25 +7,24 @@
 
 namespace CustomLoadouts
 {
-    using System;
     using System.Collections.Generic;
+    using Exiled.API.Enums;
+    using Exiled.API.Extensions;
     using Exiled.Events.EventArgs;
     using Exiled.Permissions.Extensions;
 
     /// <summary>
     /// Contains all of the EventHandlers used by this plugin.
     /// </summary>
-    public static class EventHandlers
+    public class EventHandlers
     {
-        private static readonly Random Random = new Random();
-
         /// <summary>
         /// Gets all currently parsed <see cref="Loadout"/> objects.
         /// </summary>
         public static List<Loadout> Loadouts { get; } = new List<Loadout>();
 
         /// <inheritdoc cref="Exiled.Events.Handlers.Player.OnChangingRole(ChangingRoleEventArgs)"/>
-        internal static void OnChangedRole(ChangedRoleEventArgs ev)
+        public void OnChangingRole(ChangingRoleEventArgs ev)
         {
             foreach (Loadout loadout in Loadouts)
             {
@@ -35,17 +34,17 @@ namespace CustomLoadouts
                 if (loadout.Role != ev.Player.Role && loadout.Role != RoleType.None)
                     continue;
 
-                if (loadout.Chance < Random.Next(0, 101))
+                if (loadout.Chance < Exiled.Loader.Loader.Random.Next(0, 101))
                     continue;
 
                 if (loadout.RemoveItems)
-                    ev.Player.Inventory.Clear();
+                    ev.Items.Clear();
 
-                foreach (var item in loadout.Items)
-                    ev.Player.AddItem(item);
+                foreach (ItemType item in loadout.Items)
+                    ev.Items.Add(item);
 
-                foreach (var ammo in loadout.Ammo)
-                    ev.Player.Ammo[(int)ammo.Key] += ammo.Value;
+                foreach (KeyValuePair<AmmoType, ushort> ammo in loadout.Ammo)
+                    ev.Ammo[ammo.Key.GetItemType()] += ammo.Value;
             }
         }
     }

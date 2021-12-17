@@ -23,13 +23,9 @@ namespace CustomLoadouts
     /// </summary>
     public class Plugin : Plugin<Config>
     {
-        private static readonly Plugin InstanceValue = new Plugin();
         private static readonly string ConfigDirectory = Path.Combine(Paths.Configs, "CustomLoadouts");
         private static readonly string FileDirectory = Path.Combine(ConfigDirectory, "config.yml");
-
-        private Plugin()
-        {
-        }
+        private EventHandlers eventHandlers;
 
         /// <inheritdoc/>
         public override string Author { get; } = "Build";
@@ -37,23 +33,18 @@ namespace CustomLoadouts
         /// <inheritdoc/>
         public override string Prefix { get; } = "customloadouts";
 
-        /// <summary>
-        /// Gets a static instance of the <see cref="Plugin"/> class.
-        /// </summary>
-        internal static Plugin Instance { get; } = InstanceValue;
-
         /// <inheritdoc/>
         public override void OnEnabled()
         {
-            Exiled.Events.Handlers.Player.ChangedRole += EventHandlers.OnChangedRole;
-            Exiled.Events.Handlers.Server.ReloadedConfigs += OnReloadedConfigs;
-
             if (!LoadLoadouts())
             {
-                OnDisabled();
+                Log.Error("Unable to read from the loadouts config! The plugin will not be enabled.");
                 return;
             }
 
+            eventHandlers = new EventHandlers();
+            Exiled.Events.Handlers.Player.ChangingRole += eventHandlers.OnChangingRole;
+            Exiled.Events.Handlers.Server.ReloadedConfigs += OnReloadedConfigs;
             base.OnEnabled();
         }
 
@@ -61,8 +52,9 @@ namespace CustomLoadouts
         public override void OnDisabled()
         {
             EventHandlers.Loadouts.Clear();
-            Exiled.Events.Handlers.Player.ChangedRole -= EventHandlers.OnChangedRole;
+            Exiled.Events.Handlers.Player.ChangingRole -= eventHandlers.OnChangingRole;
             Exiled.Events.Handlers.Server.ReloadedConfigs -= OnReloadedConfigs;
+            eventHandlers = null;
             base.OnDisabled();
         }
 
@@ -140,7 +132,7 @@ namespace CustomLoadouts
 
                             bool removeItems = false;
                             List<ItemType> items = new List<ItemType>();
-                            Dictionary<AmmoType, uint> ammo = new Dictionary<AmmoType, uint>();
+                            Dictionary<AmmoType, ushort> ammo = new Dictionary<AmmoType, ushort>();
                             foreach (JToken jToken in jProperty.Value as JArray)
                             {
                                 string name = jToken.ToString();
@@ -153,7 +145,7 @@ namespace CustomLoadouts
 
                                 if (Enum.TryParse(name, true, out AmmoType ammoType))
                                 {
-                                    ammo[ammoType] += ammoType.GetMagazineSize();
+                                    ammo[ammoType] += (ushort)ammoType.GetMagazineSize();
                                     continue;
                                 }
 

@@ -43,6 +43,6 @@ namespace CustomLoadouts
         /// <summary>
         /// Gets or sets the collection of ammo to be given to the player.
         /// </summary>
-        public Dictionary<AmmoType, uint> Ammo { get; set; }
+        public Dictionary<AmmoType, ushort> Ammo { get; set; }
     }
 }
