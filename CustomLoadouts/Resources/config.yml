@@ -18,14 +18,14 @@ customloadouts:
       - 10:
         # Starts with REMOVEITEMS to clear the default inventory before the items are added.
         - REMOVEITEMS
-        - KeycardScientistMajor
+        - KeycardResearchCoordinator
         - Medkit
       - 5:
         - REMOVEITEMS
         - GunUSP
-        - Ammo9mm
-        - Ammo9mm
-        - KeycardScientistMajor
+        - Nato9
+        - Nato9
+        - KeycardResearchCoordinator
         - Medkit
   moderatorloadouts:
     CLASSD:

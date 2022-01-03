@@ -11,6 +11,7 @@ namespace CustomLoadouts
     using Exiled.API.Enums;
     using Exiled.API.Extensions;
     using Exiled.Events.EventArgs;
+    using Exiled.Loader;
     using Exiled.Permissions.Extensions;
 
     /// <summary>
@@ -31,10 +32,10 @@ namespace CustomLoadouts
                 if (!ev.Player.CheckPermission(loadout.Permission))
                     continue;
 
-                if (loadout.Role != ev.Player.Role && loadout.Role != RoleType.None)
+                if (loadout.Role != ev.NewRole && loadout.Role != RoleType.None)
                     continue;
 
-                if (loadout.Chance < Exiled.Loader.Loader.Random.Next(0, 101))
+                if (loadout.Chance < Loader.Random.Next(0, 101))
                     continue;
 
                 if (loadout.RemoveItems)
