@@ -28,10 +28,13 @@ namespace CustomLoadouts
         private EventHandlers eventHandlers;
 
         /// <inheritdoc/>
-        public override string Author { get; } = "Build";
+        public override string Author => "Build";
 
         /// <inheritdoc/>
-        public override string Prefix { get; } = "customloadouts";
+        public override string Prefix => "customloadouts";
+
+        /// <inheritdoc />
+        public override Version RequiredExiledVersion { get; } = new Version(5, 0, 0);
 
         /// <inheritdoc/>
         public override void OnEnabled()

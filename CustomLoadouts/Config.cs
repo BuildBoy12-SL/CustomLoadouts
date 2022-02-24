@@ -17,12 +17,6 @@ namespace CustomLoadouts
         public bool IsEnabled { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a value indicating whether debug messages will be present.
-        /// </summary>
-        [Description("Whether debug messages should show.")]
-        public bool Debug { get; set; } = false;
-
-        /// <summary>
         /// Gets or sets a value indicating whether this server should read from the global loadout config.
         /// </summary>
         [Description("Whether this server should read from the global loadout config.")]
